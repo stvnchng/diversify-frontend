@@ -78,12 +78,9 @@
     });
 
     // Add 'submit' event handler
-    document.querySelectorAll("form").forEach((form) => {
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-
-        send(form.id);
-      });
+    document.querySelector("form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      send();
     });
 
     async function addBackground() {
