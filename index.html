@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diversify - Upload Data to Server</title>
+  </head>
+  <body role="main">
+    <form onsubmit="addBackground()">
+      <h1>Add a new Background</h1>
+      <hr />
+      <br />
+      <label for="language">Enter language:</label>
+      <input id="language" name="language" type="text" required />
+      <label for="language">Enter race:</label>
+      <input id="race" name="race" type="text" required />
+      <input type="submit" value="Add Background" />
+      <br />
+      <br />
+    </form>
+    <form>
+      <h1>POST to firstnames or surnames</h1>
+      <hr />
+      <br />
+
+      <label for="csv">Choose a CSV file to upload:</label>
+      <input id="csv" name="csv" type="file" accept=".csv" required />
+
+      <br />
+      <br />
+
+      <hr />
+
+      <input type="submit" value="Upload Data" />
+    </form>
+  </body>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.1/papaparse.min.js"
+    integrity="sha512-EbdJQSugx0nVWrtyK3JdQQ/03mS3Q1UiAhRtErbwl1YL/+e2hZdlIcSURxxh7WXHTzn83sjlh2rysACoJGfb6g=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script>
+    var fileInput = document.getElementById("csv");
+    let requests = [];
+    let destination = "";
+    fileInput.addEventListener("change", function (event) {
+      let csvInput = event.target;
+      let file = csvInput.files[0];
+      Papa.parse(file, {
+        complete: function (results) {
+          const csvType = results.data[0][0];
+          for (const entry of results.data) {
+            if (entry[0] === csvType || entry[0] === "") continue;
+            let data;
+            if (csvType === "name") {
+              data = {
+                firstName: entry[0],
+                gender: entry[1],
+                language: entry[2],
+              };
+              destination = "add-firstname";
+            } else if (csvType === "surname") {
+              data = {
+                surname: entry[0],
+                language: entry[1],
+              };
+              destination = "add-surname";
+            } else {
+              alert("Malformed CSV. Reformat your shit and try again.");
+              return;
+            }
+            requests.push(data);
+          }
+        },
+      });
+    });
+
+    // Add 'submit' event handler
+    document.querySelectorAll("form").forEach((form) => {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        send(form.id);
+      });
+    });
+
+    async function addBackground() {
+      const language = document.getElementById("language").value.trim();
+      const race = document.getElementById("race").value.trim();
+      if (!language || !race) {
+        alert("Fill in both fields dumbass");
+        return;
+      }
+      const data = {
+        language: language,
+        race: race,
+      };
+
+      await fetch("http://localhost:8080/api/add-background", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+        .then((response) => {
+          let data = response.json();
+          console.log(data);
+        })
+        .catch((err) => console.error(err));
+    }
+
+    async function send() {
+      const url = `http://localhost:8080/api/${destination}`;
+      for (const req of requests) {
+        await fetch(url, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(req),
+        })
+          .then((response) => {
+            let data = response.json();
+            console.log(data);
+          })
+          .catch((err) => console.error(err));
+      }
+    }
+  </script>
+</html>
