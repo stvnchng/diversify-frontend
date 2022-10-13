@@ -78,10 +78,21 @@
     });
 
     // Add 'submit' event handler
-    document.querySelector("form").addEventListener("submit", (event) => {
-      event.preventDefault();
-      send();
-    });
+    document.querySelectorAll("form").forEach((form) =>
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        send()
+          .then(() => {
+            alert("Finished uploading data!");
+            requests = [];
+          })
+          .catch((err) =>
+            alert(
+              "There was an issue posting to the DB. Make sure the server and DB instance is running."
+            )
+          );
+      })
+    );
 
     async function addBackground() {
       const language = document.getElementById("language").value.trim();
