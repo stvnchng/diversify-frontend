@@ -19,13 +19,13 @@
       <br />
       <br />
     </form>
-    <form>
+    <form onsubmit="sendData()">
       <h1>POST to firstnames or surnames</h1>
       <hr />
       <br />
 
       <label for="csv">Choose a CSV file to upload:</label>
-      <input id="csv" name="csv" type="file" accept=".csv" required />
+      <input id="csv" name="csv" type="file" accept=".csv" required multiple />
 
       <br />
       <br />
@@ -44,55 +44,58 @@
   <script>
     var fileInput = document.getElementById("csv");
     let requests = [];
-    let destination = "";
     fileInput.addEventListener("change", function (event) {
       let csvInput = event.target;
-      let file = csvInput.files[0];
-      Papa.parse(file, {
-        complete: function (results) {
-          const csvType = results.data[0][0];
-          for (const entry of results.data) {
-            if (entry[0] === csvType || entry[0] === "") continue;
-            let data;
-            if (csvType === "name") {
-              data = {
-                firstName: entry[0],
-                gender: entry[1],
-                language: entry[2],
-              };
-              destination = "add-firstname";
-            } else if (csvType === "surname") {
-              data = {
-                surname: entry[0],
-                language: entry[1],
-              };
-              destination = "add-surname";
-            } else {
-              alert("Malformed CSV. Reformat your shit and try again.");
-              return;
+      for (const file of csvInput.files) {
+        Papa.parse(file, {
+          complete: function (results) {
+            const csvType = results.data[0][0];
+            for (const entry of results.data) {
+              if (entry[0] === csvType || entry[0] === "") continue;
+              let data;
+              if (csvType === "name") {
+                data = {
+                  firstName: entry[0],
+                  gender: entry[1],
+                  language: entry[2],
+                  destination: "add-firstname",
+                };
+              } else if (csvType === "surname") {
+                data = {
+                  surname: entry[0],
+                  language: entry[1],
+                  destination: "add-surname",
+                };
+              } else {
+                alert("Malformed CSV. Reformat your shit and try again.");
+                return;
+              }
+              requests.push(data);
             }
-            requests.push(data);
-          }
-        },
-      });
+          },
+        });
+      }
     });
 
     // Add 'submit' event handler
     document.querySelectorAll("form").forEach((form) =>
       form.addEventListener("submit", (event) => {
         event.preventDefault();
-        send()
-          .then(() => {
-            alert("Finished uploading data!");
-            requests = [];
-          })
-          .catch((err) =>
-            alert(
-              "There was an issue posting to the DB. Make sure the server and DB instance is running."
-            )
-          );
       })
     );
+
+    async function sendData() {
+      send()
+        .then(() => {
+          alert("Finished uploading data!");
+          requests = [];
+        })
+        .catch((err) =>
+          alert(
+            "There was an issue posting to the DB. Make sure the server and DB instance is running."
+          )
+        );
+    }
 
     async function addBackground() {
       const language = document.getElementById("language").value.trim();
@@ -122,8 +125,8 @@
     }
 
     async function send() {
-      const url = `http://localhost:8080/api/${destination}`;
       for (const req of requests) {
+        const url = `http://localhost:8080/api/${req.destination}`;
         await fetch(url, {
           method: "POST",
           headers: {
