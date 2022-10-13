@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
     <title>Diversify - Upload Data to Server</title>
   </head>
   <body role="main">
     <form onsubmit="addBackground()">
       <h1>Add a new Background</h1>
       <hr />
-      <br />
       <label for="language">Enter language:</label>
       <input id="language" name="language" type="text" required />
       <label for="language">Enter race:</label>
@@ -26,14 +26,47 @@
 
       <label for="csv">Choose a CSV file to upload:</label>
       <input id="csv" name="csv" type="file" accept=".csv" required multiple />
-
+      <div id="selectedFiles"></div>
       <br />
-      <br />
-
-      <hr />
-
       <input type="submit" value="Upload Data" />
     </form>
+    <form onsubmit="generatePerson()">
+      <h1>GET a random profile</h1>
+      <hr />
+      <div style="margin-bottom: 15px;">Select the score of the person to generate</div>
+      <div class='vertical-align'>
+        <div class='btns'>
+          <label>
+            <input checked='' name='score' type='radio' value='1'>
+              <span class='btn first'>1</span>
+            </input>
+          </label>
+          <label>
+            <input name='score' type='radio' value='2'>
+              <span class='btn'>2</span>
+            </input>
+          </label>
+          <label>
+            <input name='score' type='radio' value='3'>
+              <span class='btn'>3</span>
+            </input>
+          </label>
+          <label>
+            <input name='score' type='radio' value='4'>
+              <span class='btn'>4</span>
+            </input>
+          </label>
+          <label>
+            <input name='score' type='radio' value='5'>
+              <span class='btn last'>5</span>
+            </input>
+          </label>
+        </div>
+      </div>
+      <br />
+      <input type="submit" value="Generate Person" />
+    </form>
+    <div id="userProfiles"></div>
   </body>
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.1/papaparse.min.js"
@@ -42,8 +75,8 @@
     referrerpolicy="no-referrer"
   ></script>
   <script>
-    var fileInput = document.getElementById("csv");
     let requests = [];
+    const fileInput = document.getElementById("csv");
     fileInput.addEventListener("change", function (event) {
       let csvInput = event.target;
       for (const file of csvInput.files) {
@@ -77,6 +110,18 @@
       }
     });
 
+    fileInput.addEventListener("change", handleFileSelect, false);
+
+    const selectedFiles = document.getElementById("selectedFiles");
+    function handleFileSelect(e) {
+      if (!e.target.files) return;
+
+      selectedFiles.innerHTML = "<br/>";
+      for (const f of e.target.files) {
+        selectedFiles.innerHTML += f.name + "<br/>";
+      }
+    }
+
     // Add 'submit' event handler
     document.querySelectorAll("form").forEach((form) =>
       form.addEventListener("submit", (event) => {
@@ -84,7 +129,56 @@
       })
     );
 
+    const userProfiles = document.getElementById("userProfiles");
+    function createUser(info) {
+      console.log(info);
+      const name = info.firstname + " " + info.surname;
+      const gender = info.gender;
+      const race = info.race;
+      const sexOr = info.sexOr;
+      const score = info.score;
+      userProfiles.innerHTML += `
+        <div class="profile">
+          <div>Name: ${name}</div>
+          <div>Gender: ${gender}</div>
+          <div>Race: ${race}</div>
+          <div>Sexual Orientation: ${sexOr}</div>
+          <div>Diversity Score: ${score}</div>
+        </div>`;
+    }
+
+    async function generatePerson() {
+      const scoreButtons = document.getElementsByName("score");
+      let score;
+      for (const radio of scoreButtons) {
+        if (radio.checked) {
+          score = radio.value;
+          break;
+        }
+      }
+
+      if (score > 2) {
+        // TODO: remove when done
+        alert(
+          "Sorry, only scores lower than or equal to two are allowed at this time."
+        );
+        return;
+      }
+      await fetch(`http://localhost:8080/api/generate-profile/${score}`)
+        .then((data) => {
+          return data.json();
+        })
+        .then((info) => {
+          createUser(info);
+        })
+        .catch((err) => console.error(err));
+    }
+
     async function sendData() {
+      if (!requests) {
+        alert("You haven't uploaded anything, genius.");
+        return;
+      }
       send()
         .then(() => {
           alert("Finished uploading data!");
