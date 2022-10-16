@@ -66,6 +66,7 @@
       </div>
       <br />
       <input type="submit" value="Generate Person" />
+      <button type="button" onclick="clearAllProfiles()">Clear all profiles</button>
     </form>
     <div id="userProfiles"></div>
     </div>
@@ -132,6 +133,11 @@
     );
 
     const userProfiles = document.getElementById("userProfiles");
+
+    function clearAllProfiles() {
+      userProfiles.innerHTML = ''
+    }
+
     function createUser(info) {
       console.log(info);
       const name = info.firstname + " " + info.surname;
