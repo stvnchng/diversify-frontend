@@ -89,22 +89,42 @@
             for (const entry of results.data) {
               if (entry[0] === csvType || entry[0] === "") continue;
               let data;
-              if (csvType === "name") {
-                data = {
-                  firstName: entry[0],
-                  gender: entry[1],
-                  language: entry[2],
-                  destination: "add-firstname",
-                };
-              } else if (csvType === "surname") {
-                data = {
-                  surname: entry[0],
-                  language: entry[1],
-                  destination: "add-surname",
-                };
-              } else {
-                alert("Malformed CSV. Reformat your shit and try again.");
-                return;
+              switch (csvType) {
+                case 'name':
+                  data = {
+                    firstName: entry[0],
+                    gender: entry[1],
+                    language: entry[2],
+                    destination: "add-firstname",
+                  };
+                case 'surname':
+                  data = {
+                    surname: entry[0],
+                    language: entry[1],
+                    destination: "add-surname",
+                  };
+                case 'job':
+                  data = {
+                    job: entry[0],
+                    industry: entry[1],
+                    gender: entry[2],
+                    destination: "add-job",
+                  };
+                case 'company':
+                  data = {
+                    company: entry[0],
+                    industry: entry[1],
+                    destination: "add-company",
+                  };
+                case 'title': //TODO: this may not be necessary
+                  data = {
+                    title: entry[0],
+                    gender: entry[1],
+                    destination: "add-title",
+                  };
+                default:
+                  alert("Malformed CSV. Reformat your shit and try again.");
+                  return;
               }
               requests.push(data);
             }
