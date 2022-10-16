@@ -165,6 +165,7 @@
         }
       }
 
+      // TODO: change url to deployed endpoint
       await fetch(`http://localhost:8080/api/generate-profile/${score}`)
         .then((data) => {
           return data.json();
