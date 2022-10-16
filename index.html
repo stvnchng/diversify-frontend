@@ -159,13 +159,6 @@
         }
       }
 
-      if (score > 2) {
-        // TODO: remove when done
-        alert(
-          "Sorry, only scores lower than or equal to two are allowed at this time."
-        );
-        return;
-      }
       await fetch(`http://localhost:8080/api/generate-profile/${score}`)
         .then((data) => {
           return data.json();
